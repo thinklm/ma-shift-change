@@ -2,6 +2,7 @@
 from google.cloud import firestore
 from google.cloud.firestore_v1.query import Query
 import json
+import random
 from datetime import datetime, timedelta
 import pytz
 import streamlit as st
@@ -21,6 +22,11 @@ except Exception as e:
 
 ## FUNÇÕES
 def __spaces(repeticoes: int = 3) -> None:
+    """Escreve espaços vazios para como forma de adicionar espaços verticais entre os elementos.
+
+    Args:
+        repeticoes (int, optional): Quantidade de espaços verticais. Defaults to 3.
+    """
     _ = [st.write("") for _ in range(repeticoes)]
 
 
@@ -34,7 +40,7 @@ def __query(home: bool=False) -> Query.stream:
     Returns:
         Query.stream: Generator com objetos correspondentes aos filtros de busca aplicados.
     """
-    fechamentos_ref = db.collection(u"teste_fechamento").document(u"JWEz12ARyHZGAs9qX3qy").collection("teste_")
+    fechamentos_ref = db.collection(u"fechamento_eta").document(u"JWEz12ARyHZGAs9qX3qy").collection("teste_")
     docs = fechamentos_ref.order_by(
         u"date", direction=firestore.Query.DESCENDING        
     ).limit(1)
@@ -115,7 +121,6 @@ def __merge_teste(query: Query.stream) -> dict:
     merged = {
         "date": "",
         "endedshift": "",
-        "area": "",
         "coluna_di_saturada_100": "",
         "coluna_di_saturada_101": "",
         "regenerar_100": "",
@@ -140,6 +145,113 @@ def __merge_teste(query: Query.stream) -> dict:
 
     return merged
 
+
+
+
+def __parse_to_boolean (submit_args: dict) -> dict:
+    new_args = submit_args
+    for key_out in new_args.keys():
+        for key_in in new_args[key_out].keys():
+            if new_args[key_out][key_in] == "Não":
+                new_args[key_out][key_in] = False
+            elif new_args[key_out][key_in] == "Sim":
+                new_args[key_out][key_in] = True
+
+    return new_args
+
+
+
+def _upload_shift_data(submit_args: dict, teste: bool=False) -> None:
+    """Faz o upload de dados do turno selecionado para o banco de dados.
+
+    Args:
+        submit_args (dict): Objeto com os valores a serem salvos
+        teste (bool, optional): Modo de teste configurável para o desenvolvedor. Defaults to False.
+    """
+    submit_args = __parse_to_boolean(submit_args=submit_args)
+    now = datetime.now().astimezone(pytz.timezone("America/Sao_Paulo"))
+
+    new_id = now.strftime("%d%m%Y") + st.session_state.sft + str(random.randrange(1, 10**3)).zfill(4)  
+    for key in submit_args.keys():
+        submit_args[key]["date"] = now
+
+    doc_ref_eta = db.collection(u"fechamento_eta").document(new_id)
+    doc_ref_eta.set(submit_args["ETA"])
+    doc_ref_etei = db.collection(u"fechamento_etei").document(new_id)
+    doc_ref_etei.set(submit_args["ETEI"])
+    doc_ref_obs = db.collection(u"fechamento_obs").document(new_id)
+    doc_ref_obs.set(submit_args["OBS"])
+    
+
+
+
+
+def __submit_callback() -> None:
+    """Callback Function para o Submit do Forms para Inserir Dados.
+    """
+    
+    if st.session_state.sft == "Selecione":
+        st.error("Turno não selecionado!")
+    elif st.session_state.silo_cal == "":
+        st.error("Nível de Silo de Cal não informado!")
+
+    else:   
+        submit_args = {
+            "ETA": {
+                "endedshift": st.session_state.sft,
+                "coluna_di_saturada_100": st.session_state.coluna_di_saturada_100,
+                "coluna_di_saturada_101": st.session_state.coluna_di_saturada_101,
+                "regenerar_100": st.session_state.regenerar_100,
+                "regenerar_101": st.session_state.regenerar_101,
+                "troca_filtro_polidor_1": st.session_state.troca_filtro_polidor_1,
+                "troca_filtro_polidor_1": st.session_state.troca_filtro_polidor_2,
+            },
+            "ETEI": {
+                "endedshift": st.session_state.sft,
+                "dosou_antiespumante_mbr": st.session_state.antiespumante_mbr,
+                "envio_sanitario_mbr": st.session_state.sanitario_mbr,
+                "transbordou_mbr": st.session_state.transbordou_mbr,
+                "troca_filtro_polidor": st.session_state.troca_filtro_polidor_etei,
+                "nivel_silo_cal": float(st.session_state.silo_cal),
+            },
+            "OBS": {
+                "endedshift": st.session_state.sft,
+                "geral": st.session_state.obs_geral,
+                "eta": st.session_state.obs_eta,
+                "quimicos": st.session_state.obs_quim,
+                "etei": st.session_state.obs_etei,
+                "mbr": st.session_state.obs_mbr,
+                "sanitaria": st.session_state.obs_sanitaria
+            }
+        }
+
+        
+        # Sobe os dados do turno para o banco de dados
+        _upload_shift_data(submit_args)
+
+        # Mensagem de sucesso
+        st.success("Dados enviados com sucesso!")
+        
+        # Limpar os campos de se inserir dados
+        clear_list_1 = ["sft", "silo_cal", "obs_geral", "obs_eta", 
+        "obs_quim", "obs_etei", "obs_mbr", "obs_sanitaria"]
+        clear_list_2 = ["coluna_di_saturada_100", "coluna_di_saturada_101", "regenerar_100",
+        "regenerar_101", "troca_filtro_polidor_1", "troca_filtro_polidor_2", "antiespumante_mbr",
+        "sanitario_mbr", "transbordou_mbr", "troca_filtro_polidor_etei"]
+
+        for key in clear_list_1:
+            if key not in st.session_state.keys():
+                st.error("Chave inexistente")
+            elif key == "sft":
+                st.session_state[key] = "Selecione"
+            else:
+                st.session_state[key] = ""
+
+        for key in clear_list_2:
+            if key not in st.session_state.keys():
+                st.error("Chave inexistente")
+            else:
+                st.session_state[key] = "Não"
 
 
 
@@ -186,12 +298,12 @@ def __inserir_dados() -> None:
 
         with col_eta_radio:      
             __spaces(5)   
-            st.radio(label="", options=["Sim", "Não"], index=1, key="radio1")
-            st.radio(label="", options=["Sim", "Não"], index=1, key="radio2")
-            st.radio(label="", options=["Sim", "Não"], index=1, key="radio3")
-            st.radio(label="", options=["Sim", "Não"], index=1, key="radio4")
-            st.radio(label="", options=["Sim", "Não"], index=1, key="radio5")
-            st.radio(label="", options=["Sim", "Não"], index=1, key="radio6")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="troca_filtro_polidor_1")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="troca_filtro_polidor_2")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="coluna_di_saturada_100")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="coluna_di_saturada_101")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="regenerar_100")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="regenerar_101")
 
         with col_empty1:
             st.empty()
@@ -209,9 +321,9 @@ def __inserir_dados() -> None:
 
         with col_mbr_radio:      
             __spaces(5)   
-            st.radio(label="", options=["Sim", "Não"], key="radio7")
-            st.radio(label="", options=["Sim", "Não"], key="radio8")
-            st.radio(label="", options=["Sim", "Não"], key="radio9")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="antiespumante_mbr")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="sanitario_mbr")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="transbordou_mbr")
 
         with col_empty2:
             st.empty()
@@ -227,7 +339,7 @@ def __inserir_dados() -> None:
 
         with col_etei_radio:      
             __spaces(5)   
-            st.radio(label="", options=["Sim", "Não"], key="radio10")
+            st.radio(label="", options=["Sim", "Não"], index=1, key="troca_filtro_polidor_etei")
             st.text_input(label="", placeholder="0 - 100", key="silo_cal")
 
 
@@ -262,7 +374,7 @@ def __inserir_dados() -> None:
             st.text_area("Sanitária", placeholder="Observações", key="obs_sanitaria")
 
         # Botão de Envio do Forms para o BD
-        st.form_submit_button(label="Enviar")
+        st.form_submit_button(label="Enviar", on_click=__submit_callback)
 
 
 
@@ -274,8 +386,8 @@ def __buscar_dados() -> None:
 
 
 
-def __submit_callback() -> None:
-    pass
+# def __submit_callback() -> None:
+#     pass
 
 
 
