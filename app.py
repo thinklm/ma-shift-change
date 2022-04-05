@@ -65,30 +65,21 @@ def __query(area: str, home: bool=False) -> Query.stream:
     Returns:
         Query.stream: Generator com objetos correspondentes aos filtros de busca aplicados.
     """
-    # if home:
-    #     fechamentos_ref = db.collection(f"fechamento_{area}")
-    #     docs = fechamentos_ref.order_by(
-    #         u"date", direction=firestore.Query.DESCENDING
-    #     ).limit(1)
+    if home:
+        fechamentos_ref = db.collection(f"fechamento_{area}")
+        docs = fechamentos_ref.order_by(
+            u"date", direction=firestore.Query.DESCENDING
+        ).limit(1)
 
-    #     date_query = datetime.strptime(
-    #         f"{docs.get()[0].to_dict()['date'].astimezone(pytz.timezone('America/Sao_Paulo')).date()}", "%Y-%m-%d"
-    #     )
-    #     shift = docs.get()[0].to_dict()["endedshift"]
+        date_query = datetime.strptime(
+            f"{docs.get()[0].to_dict()['date'].astimezone(pytz.timezone('America/Sao_Paulo')).date()}", "%Y-%m-%d"
+        )
+        shift = docs.get()[0].to_dict()["endedshift"]
 
-    # else:
-    #     date_query = datetime.strptime(f"{st.session_state.date_search}", "%Y-%m-%d")
-    #     shift = st.session_state.sft_search
+    else:
+        date_query = datetime.strptime(f"{st.session_state.date_search}", "%Y-%m-%d")
+        shift = st.session_state.sft_search
 
-    fechamentos_ref = db.collection(f"fechamento_{area}")
-    docs = fechamentos_ref.order_by(
-        u"date", direction=firestore.Query.DESCENDING
-    ).limit(1)
-
-    date_query = datetime.strptime(
-        f"{docs.get()[0].to_dict()['date'].astimezone(pytz.timezone('America/Sao_Paulo')).date()}", "%Y-%m-%d"
-    )
-    shift = docs.get()[0].to_dict()["endedshift"]
 
     fechamentos_ref = db.collection(f"fechamento_{area}")
     doc_ref = fechamentos_ref.where(
@@ -504,7 +495,19 @@ def __inserir_dados() -> None:
 
 
 def __buscar_dados() -> None:
-    st.write("Tela para Buscar Dados")
+    """Estrutura no menu lateral para definir o filtro de busca por data e turno.
+    """
+    
+    # Menu lateral para busca
+    st.sidebar.write("")
+    st.sidebar.write("\n\nFaça sua busca:\n\n")
+    st.sidebar.date_input("Data", key="date_search")
+    st.sidebar.selectbox(label="Turno", options=["Selecione", "A", "B", "C"], key="sft_search")
+    st.sidebar.button(label="Buscar", key="search_button")
+
+    # Search button click
+    if st.session_state.search_button:
+        __search_callback()
 
 
 
