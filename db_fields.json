@@ -1,0 +1,31 @@
+{
+    "eta": [
+        "date",
+        "endedshift",
+        "coluna_di_saturada_100",
+        "coluna_di_saturada_101",
+        "regenerar_100",
+        "regenerar_101",
+        "troca_filtro_polidor_1",
+        "troca_filtro_polidor_2"
+    ],
+    "etei": [
+        "date",
+        "endedshift",
+        "dosou_antiespumante_mbr",
+        "envio_sanitario_mbr",
+        "transbordou_mbr",
+        "troca_filtro_polidor",
+        "nivel_silo_cal"
+    ],
+    "obs": [
+        "date",
+        "endedshift",
+        "geral",
+        "eta",
+        "quimicos",
+        "etei",
+        "mbr",
+        "sanitaria"
+    ]
+}

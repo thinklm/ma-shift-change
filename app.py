@@ -1,7 +1,7 @@
 ## IMPORTS
 from google.cloud import firestore
 from google.cloud.firestore_v1.query import Query
-import json
+import json, re
 import random
 from datetime import datetime, timedelta
 import pytz
@@ -31,7 +31,32 @@ def __spaces(repeticoes: int = 3) -> None:
 
 
 
-def __query(home: bool=False) -> Query.stream:
+
+
+def __parse_to_boolean(submit_args: dict) -> dict:
+    """Converte os estados dos radio buttons de Sim ou Não para booleano.
+
+    Args:
+        submit_args (dict): Argumentos para subir para o Banco de Dados. 
+
+    Returns:
+        dict: Arguntmentos devidamente convertidos. 
+    """
+    new_args = submit_args
+    for key_out in new_args.keys():
+        for key_in in new_args[key_out].keys():
+            if new_args[key_out][key_in] == "Não":
+                new_args[key_out][key_in] = False
+            elif new_args[key_out][key_in] == "Sim":
+                new_args[key_out][key_in] = True
+
+    return new_args
+
+
+
+
+
+def __query(area: str, home: bool=False) -> Query.stream:
     """Busca no Banco de Dados com filtros.
 
     Args:
@@ -40,9 +65,24 @@ def __query(home: bool=False) -> Query.stream:
     Returns:
         Query.stream: Generator com objetos correspondentes aos filtros de busca aplicados.
     """
-    fechamentos_ref = db.collection(u"fechamento_eta").document(u"JWEz12ARyHZGAs9qX3qy").collection("teste_")
+    # if home:
+    #     fechamentos_ref = db.collection(f"fechamento_{area}")
+    #     docs = fechamentos_ref.order_by(
+    #         u"date", direction=firestore.Query.DESCENDING
+    #     ).limit(1)
+
+    #     date_query = datetime.strptime(
+    #         f"{docs.get()[0].to_dict()['date'].astimezone(pytz.timezone('America/Sao_Paulo')).date()}", "%Y-%m-%d"
+    #     )
+    #     shift = docs.get()[0].to_dict()["endedshift"]
+
+    # else:
+    #     date_query = datetime.strptime(f"{st.session_state.date_search}", "%Y-%m-%d")
+    #     shift = st.session_state.sft_search
+
+    fechamentos_ref = db.collection(f"fechamento_{area}")
     docs = fechamentos_ref.order_by(
-        u"date", direction=firestore.Query.DESCENDING        
+        u"date", direction=firestore.Query.DESCENDING
     ).limit(1)
 
     date_query = datetime.strptime(
@@ -50,8 +90,7 @@ def __query(home: bool=False) -> Query.stream:
     )
     shift = docs.get()[0].to_dict()["endedshift"]
 
-
-    fechamentos_ref = db.collection(u"teste_fechamento")
+    fechamentos_ref = db.collection(f"fechamento_{area}")
     doc_ref = fechamentos_ref.where(
         u"date", u">", date_query
     ).where(
@@ -67,7 +106,7 @@ def __query(home: bool=False) -> Query.stream:
 
 
 
-def __merge_docs(query: Query.stream) -> dict:
+def __merge_docs(area: str, query: Query.stream) -> dict:
     """Concatena os documentos com a mesma especificação em um só.
 
     Args:
@@ -76,23 +115,13 @@ def __merge_docs(query: Query.stream) -> dict:
     Returns:
         dict: Objeto com as informações concatenadas. 
         Retorna None caso não haja registros para a busca aplicada.
-    """
-
-    merged = {
-        "date": "",
-        "endedshift": "",
-        "area": "",
-        "coluna_di_saturada_100": "",
-        "coluna_di_saturada_101": "",
-        "regenerar_100": "",
-        "regenerar_101": "",
-        "troca_filtro_polidor_1": "",
-        "troca_filtro_polidor_1": "",
-    }
+    """    
+    with open("db_fields.json", mode="r") as file:
+        fields_json = json.load(file)
+        merged = dict.fromkeys(fields_json[area])
 
     for doc in query:
         for key in merged.keys():
-            
             if key == "date":
                 if doc.to_dict()[key] == "":
                     return None
@@ -102,62 +131,140 @@ def __merge_docs(query: Query.stream) -> dict:
                 merged[key] = doc.to_dict()[key]   
             
             else:
-                merged[key] = merged[key] + "\n\n" + doc.to_dict()[key]
+                merged[key] = doc.to_dict()[key]
 
     return merged
 
 
-def __merge_teste(query: Query.stream) -> dict:
-    """Concatena os documentos com a mesma especificação em um só.
+
+
+
+
+def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict) -> None:
+    """Apresenta as informações de um turno na aplicação.
 
     Args:
-        query (Query.stream): Stream de queries resultantes da busca filtrada no banco de dados
-
-    Returns:
-        dict: Objeto com as informações concatenadas. 
-        Retorna None caso não haja registros para a busca aplicada.
+        query (dict): Objeto com os valores a serem apresentados na aplicação
     """
+    # Verifica a ausência de registro
+    if (query_eta == None) | (query_eta["date"] == ""):
+        st.write("## :warning: Busca não encontrada!")
 
-    merged = {
-        "date": "",
-        "endedshift": "",
-        "coluna_di_saturada_100": "",
-        "coluna_di_saturada_101": "",
-        "regenerar_100": "",
-        "regenerar_101": "",
-        "troca_filtro_polidor_1": "",
-        "troca_filtro_polidor_1": "",
-    }
+    else:
+        # dia, hora e turno da última modificação
+        st.subheader("Última Modificação:\n\n")
+        col_data, col_hora, col_turno, col_spare = st.columns([1, 1, 1, 3])
+        with col_data:
+            st.write(f"Dia: {query_eta['date'].astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%d/%m/%Y')}")
+        with col_hora:
+            st.write(f"Hora: {query_eta['date'].astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%H:%M:%S')}")
+        with col_turno:
+            st.write(f"Turno: {query_eta['endedshift']}")
+        with col_spare:
+            st.empty()
 
-    for doc in query:
-        for key in merged.keys():
-            
-            if key == "date":
-                if doc.to_dict()[key] == "":
-                    return None
-                merged[key] = doc.to_dict()[key].astimezone(pytz.timezone("America/Sao_Paulo"))
-            
-            elif (key == "endedshift") | (merged[key] == ""):
-                merged[key] = doc.to_dict()[key]   
-            
+        # Detalhes do turno selecinado
+        col_eta, col_spare, col_etei, col_spare_2, col_obs = st.columns([4,1,4,1,5])
+
+        with col_eta:
+            st.write("## ETA")
+            # Itens
+            __spaces(1)
+            sign = ":white_check_mark:" if query_eta["coluna_di_saturada_100"] else ":x:"
+            st.write(f"{sign} Coluna DI Saturada 100")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_eta["coluna_di_saturada_101"] else ":x:"
+            st.write(f"{sign} Coluna DI Saturada 101")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_eta["troca_filtro_polidor_1"] else ":x:"
+            st.write(f"{sign} Troca Filtro Polidor 1")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_eta["troca_filtro_polidor_2"] else ":x:"
+            st.write(f"{sign} Troca Filtro Polidor 2")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_eta["regenerar_100"] else ":x:"
+            st.write(f"{sign} Necessário Regenerar 100")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_eta["regenerar_101"] else ":x:"
+            st.write(f"{sign} Necessário Regenerar 101")
+
+
+        with col_spare:
+            st.empty()
+
+
+        with col_etei:
+            st.write("## ETEI")
+            # Itens
+            __spaces(1)
+            sign = ":white_check_mark:" if query_etei["troca_filtro_polidor"] else ":x:"
+            st.write(f"{sign} Troca do Filtro Polidor")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_etei["dosou_antiespumante_mbr"] else ":x:"
+            st.write(f"{sign} Dosou Antiespumante (MBR)")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_etei["envio_sanitario_mbr"] else ":x:"
+            st.write(f"{sign} Envio Sanitária (MBR)")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_etei["transbordou_mbr"] else ":x:"
+            st.write(f"{sign} Transbordo (MBR)")
+
+            __spaces(1)
+            sign = ":white_check_mark:" if query_etei["nivel_silo_cal"] > 30 else ":x:"
+            st.write(f"{sign} Nível do Silo  de Cal: {query_etei['nivel_silo_cal']}%")
+
+
+        with col_spare_2:
+            st.empty()
+
+
+        with col_obs:
+            st.write("## Observações")
+
+            if ((query_obs["geral"] == "") and (query_obs["eta"] == "") and (query_obs["etei"] == "")
+            and (query_obs["quimicos"] == "") and (query_obs["sanitaria"] == "") and (query_obs["mbr"] == "")):
+                st.write("Sem observações.")
+
             else:
-                merged[key] = merged[key] + "\n\n" + doc.to_dict()[key]
+                if query_obs["geral"] != "":
+                    st.write("#### Gerais:")
+                    st.write(f'> {query_obs["geral"]}')
+                    __spaces(1)
 
-    return merged
+                if query_obs["eta"] != "":
+                    st.write("#### ETA:")
+                    st.write(f'> {query_obs["eta"]}')
+                    __spaces(1)
+                    
+                if query_obs["etei"] != "":
+                    st.write("#### ETEI:")
+                    st.write(f'> {query_obs["etei"]}')
+                    __spaces(1)
+
+                if query_obs["quimicos"] != "":
+                    st.write("#### Qupimicos:")
+                    st.write(f'> {query_obs["quimicos"]}')
+                    __spaces(1)
+
+                if query_obs["mbr"] != "":
+                    st.write("#### MBR / Aeração:")
+                    st.write(f'> {query_obs["mbr"]}')
+                    __spaces(1)
+
+                if query_obs["sanitaria"] != "":
+                    st.write("#### Sanitária:")
+                    st.write(f'> {query_obs["sanitaria"]}')
+                    __spaces(1)
 
 
-
-
-def __parse_to_boolean (submit_args: dict) -> dict:
-    new_args = submit_args
-    for key_out in new_args.keys():
-        for key_in in new_args[key_out].keys():
-            if new_args[key_out][key_in] == "Não":
-                new_args[key_out][key_in] = False
-            elif new_args[key_out][key_in] == "Sim":
-                new_args[key_out][key_in] = True
-
-    return new_args
 
 
 
@@ -194,7 +301,6 @@ def __submit_callback() -> None:
         st.error("Turno não selecionado!")
     elif st.session_state.silo_cal == "":
         st.error("Nível de Silo de Cal não informado!")
-
     else:   
         submit_args = {
             "ETA": {
@@ -204,7 +310,7 @@ def __submit_callback() -> None:
                 "regenerar_100": st.session_state.regenerar_100,
                 "regenerar_101": st.session_state.regenerar_101,
                 "troca_filtro_polidor_1": st.session_state.troca_filtro_polidor_1,
-                "troca_filtro_polidor_1": st.session_state.troca_filtro_polidor_2,
+                "troca_filtro_polidor_2": st.session_state.troca_filtro_polidor_2,
             },
             "ETEI": {
                 "endedshift": st.session_state.sft,
@@ -256,8 +362,25 @@ def __submit_callback() -> None:
 
 
 
-def __search_callback(home: bool) -> None:
-    st.write(__merge_teste(__query()))
+def __search_callback(home: bool=False) -> None:
+    """Callback Function para Buscar dados e apresentá-los na aplicação.
+    Serve tanto para a Home quanto para a tela de Buscar.
+
+    Args:
+        home (bool, optional): Opção para identificar a busca específica para a Home. Defaults to False.
+    """
+    # Busca todos os dados da data e turno escolhidos
+    query_eta = __query(area="eta", home=home)
+    query_etei = __query(area="etei", home=home)
+    query_obs = __query(area="obs", home=home)
+
+    # junta todas as informações
+    merged_query_eta = __merge_docs(area="eta", query=query_eta)
+    merged_query_etei = __merge_docs(area="etei", query=query_etei)
+    merged_query_obs = __merge_docs(area="obs", query=query_obs)
+
+    # mostra as informações na tela
+    __display_shift_info(merged_query_eta, merged_query_etei, merged_query_obs)
 
 
 
@@ -384,10 +507,6 @@ def __buscar_dados() -> None:
     st.write("Tela para Buscar Dados")
 
 
-
-
-# def __submit_callback() -> None:
-#     pass
 
 
 
