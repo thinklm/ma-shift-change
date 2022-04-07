@@ -22,7 +22,7 @@ A partir do momento que algo do turno atual for informado, aparecerá as atualiz
 
 ## Inserir
 
-![Inserir](https://github.com/thinklm/ma-shift-change/blob/main/img/inserir_screenchot.png)
+![Inserir](https://github.com/thinklm/ma-shift-change/blob/main/img/inserir_screenshot.png)
 
 Nessa tela, um _forms_ permitirá a inserção das informações no banco de dados referente a eventos ocorridos no turno com relação à ETA, ETEI, Utilidades, _Scrap_ e _Bulk Systems_, junto com campos de texto para observações estratificadas nessas áreas.
 
