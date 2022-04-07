@@ -1,6 +1,7 @@
 {
     "eta": [
         "date",
+        "id",
         "endedshift",
         "coluna_di_saturada_100",
         "coluna_di_saturada_101",
@@ -11,21 +12,24 @@
     ],
     "etei": [
         "date",
+        "id",
         "endedshift",
         "dosou_antiespumante_mbr",
         "envio_sanitario_mbr",
         "transbordou_mbr",
         "troca_filtro_polidor",
+        "quebra_emulsao",
         "nivel_silo_cal"
     ],
     "obs": [
         "date",
+        "id",
         "endedshift",
         "geral",
-        "eta",
+        "eta_etei",
         "quimicos",
-        "etei",
-        "mbr",
-        "sanitaria"
+        "mbr_aeracao_sanitaria",
+        "utilidades",
+        "scrap_bulk"
     ]
 }
