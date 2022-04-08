@@ -9,6 +9,7 @@ import streamlit as st
 st.set_page_config(layout="wide")
 
 
+
 ## DB CONNECT
 try:
     key_dict = json.loads(st.secrets["textkey"])
@@ -16,6 +17,7 @@ try:
 except Exception as e:
     st.write(f":warning: Erro na conexão com o Banco de Dados:\n{e}")
     st.write("Se persistir o erro, contate o desenvolvedor!")
+
 
 
 
@@ -314,10 +316,13 @@ def _upload_shift_data(submit_args: dict) -> None:
     for key in submit_args.keys():
         submit_args[key]["date"] = now
 
+    # Envia para BD
     doc_ref_eta = db.collection(u"fechamento_eta").document(new_id)
     doc_ref_eta.set(submit_args["ETA"])
+
     doc_ref_etei = db.collection(u"fechamento_etei").document(new_id)
     doc_ref_etei.set(submit_args["ETEI"])
+
     doc_ref_obs = db.collection(u"fechamento_obs").document(new_id)
     doc_ref_obs.set(submit_args["OBS"])
 
@@ -353,7 +358,7 @@ def __submit_callback() -> None:
     """Callback Function para o Submit do Forms para Inserir Dados.
     """
     if st.session_state.id == "":
-        st.error("Identificação não informada!")    
+        st.error("Identificação não informada!")
     elif st.session_state.sft == "Selecione":
         st.error("Turno não selecionado!")
     elif st.session_state.silo_cal == "":
@@ -461,7 +466,6 @@ def __search_callback(home: bool=False) -> None:
 def __inserir_dados() -> None:
     """Estrutura de Formulário para inserir novos dados de turno para o Banco de Dados.
     """
-
     # Header
     st.header("Inserir Dados")
 
@@ -552,7 +556,7 @@ def __inserir_dados() -> None:
             st.checkbox(label="Sim", value=False, key="troca_filtro_polidor_sim")
             __spaces(2) 
             st.checkbox(label="Sim", value=False, key="quebra_emulsao_sim")
-            # __spaces(1)   
+
             st.text_input(label="", placeholder="0 - 100", key="silo_cal")
 
         with col_etei_check_nao:      
