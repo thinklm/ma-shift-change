@@ -175,39 +175,39 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict) -> 
             # Itens
             __spaces(1)
             if query_eta["troca_filtro_polidor_1"]:
-                st.success("[Sim] Troca Filtro Polidor 1")
+                st.success("[Sim] Troca Filtro Polidor 1")      # Sim: verde
             else:
-                st.error("[Não] Troca Filtro Polidor 1")
+                st.error("[Não] Troca Filtro Polidor 1")        # Não: vermelho
 
             __spaces(1)
             if query_eta["troca_filtro_polidor_2"]:
-                st.success("[Sim] Troca Filtro Polidor 2")
+                st.success("[Sim] Troca Filtro Polidor 2")      # Sim: verde
             else:
-                st.error("[Não] Troca Filtro Polidor 2")
+                st.error("[Não] Troca Filtro Polidor 2")        # Não: vermelho
 
             __spaces(1)
             if query_eta["coluna_di_saturada_100"]:
-                st.error("[Sim] Coluna DI Saturada 100")
+                st.error("[Sim] Coluna DI Saturada 100")        # Sim: vermelho
             else:
-                st.success("[Não] Coluna DI Saturada 100")
+                st.success("[Não] Coluna DI Saturada 100")      # Não: verde
 
             __spaces(1)
             if query_eta["coluna_di_saturada_101"]:
-                st.error("[Sim] Coluna DI Saturada 101")
+                st.error("[Sim] Coluna DI Saturada 101")        # Sim: vermelho
             else:
-                st.success("[Não] Coluna DI Saturada 101")
+                st.success("[Não] Coluna DI Saturada 101")      # Não: verde
 
             __spaces(1)
             if query_eta["regenerar_100"]:
-                st.error("[Sim] Necessário Regenerar 100")
+                st.error("[Sim] Necessário Regenerar 100")      # Sim: vermelho
             else:
-                st.success("[Não] Necessário Regenerar 100")
+                st.success("[Não] Necessário Regenerar 100")    # Não: verde
 
             __spaces(1)
             if query_eta["regenerar_101"]:
-                st.error("[Sim] Necessário Regenerar 101")
+                st.error("[Sim] Necessário Regenerar 101")      # Sim: vermelho
             else:
-                st.success("[Não] Necessário Regenerar 101")
+                st.success("[Não] Necessário Regenerar 101")    # Não: verde
             
 
 
@@ -221,39 +221,39 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict) -> 
             # Itens
             __spaces(1)
             if query_etei["troca_filtro_polidor"]:
-                st.error("[Sim] Troca do Filtro Polidor")
+                st.success("[Sim] Troca do Filtro Polidor")     # Sim: verde
             else:
-                st.success("[Não] Troca do Filtro Polidor")
+                st.error("[Não] Troca do Filtro Polidor")       # Não: vermelho
 
             __spaces(1)
             if query_etei["dosou_antiespumante_mbr"]:
-                st.error("[Sim] Dosou Antiespumante (MBR)")
+                st.error("[Sim] Dosou Antiespumante (MBR)")     # Sim: vermelho
             else:
-                st.success("[Não] Dosou Antiespumante (MBR)")
+                st.success("[Não] Dosou Antiespumante (MBR)")   # Não: verde
 
             __spaces(1)
             if query_etei["envio_sanitario_mbr"]:
-                st.error("[Sim] Envio Sanitária (MBR)")
+                st.success("[Sim] Envio Sanitária (MBR)")       # Sim: verde
             else:
-                st.success("[Não] Envio Sanitária (MBR)")
+                st.error("[Não] Envio Sanitária (MBR)")         # Não: vermelho
 
             __spaces(1)
             if query_etei["transbordou_mbr"]:
-                st.error("[Sim] Transbordo (MBR)")
+                st.error("[Sim] Transbordo (MBR)")              # Sim: vermelho
             else:
-                st.success("[Não] Transbordo (MBR)")
+                st.success("[Não] Transbordo (MBR)")            # Não: verde
 
             __spaces(1)
             if query_etei["quebra_emulsao"]:
-                st.error("[Sim] Quebra de Emulsão")
+                st.success("[Sim] Quebra de Emulsão")           # Sim: verde
             else:
-                st.success("[Não] Quebra de Emulsão")
+                st.error("[Não] Quebra de Emulsão")             # Não: vermelho
 
             __spaces(1)
-            if query_etei["nivel_silo_cal"] < 30:
-                st.error(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")
+            if query_etei["nivel_silo_cal"] < 20:
+                st.error(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")      # < 20%: vermelho
             else:
-                st.success(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")
+                st.success(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")    # < 20%: verde
 
 
         with col_spare_2:
