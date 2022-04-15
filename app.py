@@ -149,155 +149,159 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict) -> 
         st.write("## :warning: Busca não encontrada!")
 
     else:
-        # dia, hora e turno da última modificação
-        col_mod, col_data, col_hora, col_turno, col_spare = st.columns([2, 1, 1, 1, 3])
+        try:
+            # dia, hora e turno da última modificação
+            col_mod, col_data, col_hora, col_turno, col_spare = st.columns([2, 1, 1, 1, 3])
 
-        with col_mod:
-            st.subheader("Última Modificação:\n\n")        
-        with col_data:
-            __spaces(1)
-            st.write(f"__Dia: {query_eta['date'].astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%d/%m/%Y')}__")
-        with col_hora:
-            __spaces(1)
-            st.write(f"__Hora: {query_eta['date'].astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%H:%M:%S')}__")
-        with col_turno:
-            __spaces(1)
-            st.write(f"__Turno: {query_eta['endedshift']}__")
-        with col_spare:
-            st.empty()
+            with col_mod:
+                st.subheader("Última Modificação:\n\n")        
+            with col_data:
+                __spaces(1)
+                st.write(f"__Dia: {query_eta['date'].astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%d/%m/%Y')}__")
+            with col_hora:
+                __spaces(1)
+                st.write(f"__Hora: {query_eta['date'].astimezone(pytz.timezone('America/Sao_Paulo')).strftime('%H:%M:%S')}__")
+            with col_turno:
+                __spaces(1)
+                st.write(f"__Turno: {query_eta['endedshift']}__")
+            with col_spare:
+                st.empty()
 
-        # Detalhes do turno selecinado
-        col_eta, col_spare, col_etei, col_spare_2, col_obs = st.columns([4,1,4,1,5])
+            # Detalhes do turno selecinado
+            col_eta, col_spare, col_etei, col_spare_2, col_obs = st.columns([4,1,4,1,5])
 
-        with col_eta:
-            __spaces(1)
-            st.write("## ETA")
-            # Itens
-            __spaces(1)
-            if query_eta["troca_filtro_polidor_1"]:
-                st.success("[Sim] Troca Filtro Polidor 1")      # Sim: verde
-            else:
-                st.error("[Não] Troca Filtro Polidor 1")        # Não: vermelho
+            with col_eta:
+                __spaces(1)
+                st.write("## ETA")
+                # Itens
+                __spaces(1)
+                if query_eta["troca_filtro_polidor_1"]:
+                    st.success("[Sim] Troca Filtro Polidor 1")      # Sim: verde
+                else:
+                    st.error("[Não] Troca Filtro Polidor 1")        # Não: vermelho
 
-            __spaces(1)
-            if query_eta["troca_filtro_polidor_2"]:
-                st.success("[Sim] Troca Filtro Polidor 2")      # Sim: verde
-            else:
-                st.error("[Não] Troca Filtro Polidor 2")        # Não: vermelho
+                __spaces(1)
+                if query_eta["troca_filtro_polidor_2"]:
+                    st.success("[Sim] Troca Filtro Polidor 2")      # Sim: verde
+                else:
+                    st.error("[Não] Troca Filtro Polidor 2")        # Não: vermelho
 
-            __spaces(1)
-            if query_eta["coluna_di_saturada_100"]:
-                st.error("[Sim] Coluna DI Saturada 100")        # Sim: vermelho
-            else:
-                st.success("[Não] Coluna DI Saturada 100")      # Não: verde
+                __spaces(1)
+                if query_eta["coluna_di_saturada_100"]:
+                    st.error("[Sim] Coluna DI Saturada 100")        # Sim: vermelho
+                else:
+                    st.success("[Não] Coluna DI Saturada 100")      # Não: verde
 
-            __spaces(1)
-            if query_eta["coluna_di_saturada_101"]:
-                st.error("[Sim] Coluna DI Saturada 101")        # Sim: vermelho
-            else:
-                st.success("[Não] Coluna DI Saturada 101")      # Não: verde
+                __spaces(1)
+                if query_eta["coluna_di_saturada_101"]:
+                    st.error("[Sim] Coluna DI Saturada 101")        # Sim: vermelho
+                else:
+                    st.success("[Não] Coluna DI Saturada 101")      # Não: verde
 
-            __spaces(1)
-            if query_eta["regenerar_100"]:
-                st.error("[Sim] Necessário Regenerar 100")      # Sim: vermelho
-            else:
-                st.success("[Não] Necessário Regenerar 100")    # Não: verde
+                __spaces(1)
+                if query_eta["regenerar_100"]:
+                    st.error("[Sim] Necessário Regenerar 100")      # Sim: vermelho
+                else:
+                    st.success("[Não] Necessário Regenerar 100")    # Não: verde
 
-            __spaces(1)
-            if query_eta["regenerar_101"]:
-                st.error("[Sim] Necessário Regenerar 101")      # Sim: vermelho
-            else:
-                st.success("[Não] Necessário Regenerar 101")    # Não: verde
-            
-
-
-        with col_spare:
-            st.empty()
+                __spaces(1)
+                if query_eta["regenerar_101"]:
+                    st.error("[Sim] Necessário Regenerar 101")      # Sim: vermelho
+                else:
+                    st.success("[Não] Necessário Regenerar 101")    # Não: verde
+                
 
 
-        with col_etei:
-            __spaces(1)
-            st.write("## ETEI")
-            # Itens
-            __spaces(1)
-            if query_etei["troca_filtro_polidor"]:
-                st.success("[Sim] Troca do Filtro Polidor")     # Sim: verde
-            else:
-                st.error("[Não] Troca do Filtro Polidor")       # Não: vermelho
-
-            __spaces(1)
-            if query_etei["dosou_antiespumante_mbr"]:
-                st.error("[Sim] Dosou Antiespumante (MBR)")     # Sim: vermelho
-            else:
-                st.success("[Não] Dosou Antiespumante (MBR)")   # Não: verde
-
-            __spaces(1)
-            if query_etei["envio_sanitario_mbr"]:
-                st.success("[Sim] Envio Sanitária (MBR)")       # Sim: verde
-            else:
-                st.error("[Não] Envio Sanitária (MBR)")         # Não: vermelho
-
-            __spaces(1)
-            if query_etei["transbordou_mbr"]:
-                st.error("[Sim] Transbordo (MBR)")              # Sim: vermelho
-            else:
-                st.success("[Não] Transbordo (MBR)")            # Não: verde
-
-            __spaces(1)
-            if query_etei["quebra_emulsao"]:
-                st.success("[Sim] Quebra de Emulsão")           # Sim: verde
-            else:
-                st.error("[Não] Quebra de Emulsão")             # Não: vermelho
-
-            __spaces(1)
-            if query_etei["nivel_silo_cal"] < 20:
-                st.error(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")      # < 20%: vermelho
-            else:
-                st.success(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")    # < 20%: verde
+            with col_spare:
+                st.empty()
 
 
-        with col_spare_2:
-            st.empty()
+            with col_etei:
+                __spaces(1)
+                st.write("## ETEI")
+                # Itens
+                __spaces(1)
+                if query_etei["troca_filtro_polidor"]:
+                    st.success("[Sim] Troca do Filtro Polidor")     # Sim: verde
+                else:
+                    st.error("[Não] Troca do Filtro Polidor")       # Não: vermelho
+
+                __spaces(1)
+                if query_etei["dosou_antiespumante_mbr"]:
+                    st.error("[Sim] Dosou Antiespumante (MBR)")     # Sim: vermelho
+                else:
+                    st.success("[Não] Dosou Antiespumante (MBR)")   # Não: verde
+
+                __spaces(1)
+                if query_etei["envio_sanitario_mbr"]:
+                    st.success("[Sim] Envio Sanitária (MBR)")       # Sim: verde
+                else:
+                    st.error("[Não] Envio Sanitária (MBR)")         # Não: vermelho
+
+                __spaces(1)
+                if query_etei["transbordou_mbr"]:
+                    st.error("[Sim] Transbordo (MBR)")              # Sim: vermelho
+                else:
+                    st.success("[Não] Transbordo (MBR)")            # Não: verde
+
+                __spaces(1)
+                if query_etei["quebra_emulsao"]:
+                    st.success("[Sim] Quebra de Emulsão")           # Sim: verde
+                else:
+                    st.error("[Não] Quebra de Emulsão")             # Não: vermelho
+
+                __spaces(1)
+                if query_etei["nivel_silo_cal"] < 20:
+                    st.error(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")      # < 20%: vermelho
+                else:
+                    st.success(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")    # < 20%: verde
 
 
-        with col_obs:
-            __spaces(1)
-            st.write("## Observações")
+            with col_spare_2:
+                st.empty()
 
-            if ((query_obs["geral"] == "") and (query_obs["eta_etei"] == "") and (query_obs["quimicos"] == "")
-            and (query_obs["mbr_aeracao_sanitaria"] == "") and (query_obs["utilidades"] == "") and (query_obs["scrap_bulk"] == "")):
-                st.write("Sem observações.")
 
-            else:
-                if query_obs["geral"] != "":
-                    st.write("#### Gerais:")
-                    st.write(f'> {query_obs["geral"]}')
-                    __spaces(1)
+            with col_obs:
+                __spaces(1)
+                st.write("## Observações")
 
-                if query_obs["eta_etei"] != "":
-                    st.write("#### ETA / ETEI:")
-                    st.write(f'> {query_obs["eta_etei"]}')
-                    __spaces(1)
-                    
-                if query_obs["quimicos"] != "":
-                    st.write("#### Químicos:")
-                    st.write(f'> {query_obs["quimicos"]}')
-                    __spaces(1)
+                if ((query_obs["geral"] == "") and (query_obs["eta_etei"] == "") and (query_obs["quimicos"] == "")
+                and (query_obs["mbr_aeracao_sanitaria"] == "") and (query_obs["utilidades"] == "") and (query_obs["scrap_bulk"] == "")):
+                    st.write("Sem observações.")
 
-                if query_obs["mbr_aeracao_sanitaria"] != "":
-                    st.write("#### MBR / Aeração / Sanitária:")
-                    st.write(f'> {query_obs["mbr_aeracao_sanitaria"]}')
-                    __spaces(1)
+                else:
+                    if query_obs["geral"] != "":
+                        st.write("#### Gerais:")
+                        st.write(f'> {query_obs["geral"]}')
+                        __spaces(1)
 
-                if query_obs["utilidades"] != "":
-                    st.write("#### Utilidades:")
-                    st.write(f'> {query_obs["utilidades"]}')
-                    __spaces(1)
+                    if query_obs["eta_etei"] != "":
+                        st.write("#### ETA / ETEI:")
+                        st.write(f'> {query_obs["eta_etei"]}')
+                        __spaces(1)
+                        
+                    if query_obs["quimicos"] != "":
+                        st.write("#### Químicos:")
+                        st.write(f'> {query_obs["quimicos"]}')
+                        __spaces(1)
 
-                if query_obs["scrap_bulk"] != "":
-                    st.write("#### Scrap / Bulk Systems:")
-                    st.write(f'> {query_obs["scrap_bulk"]}')
-                    __spaces(1)
+                    if query_obs["mbr_aeracao_sanitaria"] != "":
+                        st.write("#### MBR / Aeração / Sanitária:")
+                        st.write(f'> {query_obs["mbr_aeracao_sanitaria"]}')
+                        __spaces(1)
+
+                    if query_obs["utilidades"] != "":
+                        st.write("#### Utilidades:")
+                        st.write(f'> {query_obs["utilidades"]}')
+                        __spaces(1)
+
+                    if query_obs["scrap_bulk"] != "":
+                        st.write("#### Scrap / Bulk Systems:")
+                        st.write(f'> {query_obs["scrap_bulk"]}')
+                        __spaces(1)
+                
+        except AttributeError as e:
+            st.write(":warning: Busca não encontrada.")
 
 
 
@@ -349,6 +353,13 @@ def __conflito_checkboxes() -> bool:
                     return True 
                 
         return False
+
+
+
+
+
+def __parse_str_to_float(string: str) -> float:
+    return float(string.replace(',', '.').replace('%', ''))
     
 
 
@@ -386,7 +397,7 @@ def __submit_callback() -> None:
                 "transbordou_mbr": st.session_state.transbordou_mbr_sim,
                 "troca_filtro_polidor": st.session_state.troca_filtro_polidor_sim,
                 "quebra_emulsao": st.session_state.quebra_emulsao_sim,
-                "nivel_silo_cal": float(st.session_state.silo_cal),
+                "nivel_silo_cal": __parse_str_to_float(st.session_state.silo_cal),
             },
             "OBS": {
                 "id": st.session_state.id,
@@ -424,7 +435,7 @@ def __submit_callback() -> None:
 
         for key in clear_list_2:
             if f"{key}_sim" not in st.session_state.keys():
-                st.error("Chave inexistente")
+                st.error("Erro ao limpar formulário: chave inexistente.")
             else:
                 st.session_state[f"{key}_sim"] = False
                 st.session_state[f"{key}_nao"] = False
