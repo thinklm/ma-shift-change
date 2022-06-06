@@ -117,22 +117,18 @@ def __merge_docs(area: str, query: Query.stream) -> dict:
         fields_json = json.load(file)
         merged = dict.fromkeys(fields_json[area])
 
-    
     for doc in query:
         for key in merged.keys():
-            try:
-                if key == "date":
-                    if doc.to_dict()[key] == "":
-                        return None
-                    merged[key] = doc.to_dict()[key].astimezone(pytz.timezone("America/Sao_Paulo"))
-                
-                elif (key == "endedshift") | (merged[key] == ""):
-                    merged[key] = doc.to_dict()[key]   
-                
-                else:
-                    merged[key] = doc.to_dict()[key]
-            except KeyError:
-                merged[key] = 0
+            if key == "date":
+                if doc.to_dict()[key] == "":
+                    return None
+                merged[key] = doc.to_dict()[key].astimezone(pytz.timezone("America/Sao_Paulo"))
+            
+            elif (key == "endedshift") | (merged[key] == ""):
+                merged[key] = doc.to_dict()[key]   
+            
+            else:
+                merged[key] = doc.to_dict()[key]
 
     return merged
 
@@ -140,21 +136,19 @@ def __merge_docs(area: str, query: Query.stream) -> dict:
 
 
 
-def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict, query_quim: dict) -> None:
+def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict) -> None:
     """Apresenta as informações de um turno na aplicação.
 
     Args:
         query_eta (dict): Objeto resultante da busca no BD na coleção de fechamentos da ETA com os valores a serem apresentados na aplicação.
         query_etei (dict): Objeto resultante da busca no BD na coleção de fechamentos da ETEI com os valores a serem apresentados na aplicação.
         query_obs (dict): Objeto resultante da busca no BD na coleção de fechamentos das observações com os valores a serem apresentados na aplicação.
-        query_quim (dict): Objeto resultante da busca no BD na coleção de fechamentos de químicos com os valores a serem apresentados na aplicação.
     """
     # Verifica a ausência de registro
     if (query_eta == None) | (query_eta["date"] == ""):
         st.write("## :warning: Busca não encontrada!")
 
     else:
-        # ETA, ETEI e OBS
         try:
             # dia, hora e turno da última modificação
             col_mod, col_data, col_hora, col_turno, col_spare = st.columns([2, 1, 1, 1, 3])
@@ -174,7 +168,7 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict, que
                 st.empty()
 
             # Detalhes do turno selecinado
-            col_eta, col_etei, col_spare, col_quim, col_spare, col_obs = st.columns([4,4,1,4,1,5])
+            col_eta, col_spare, col_etei, col_spare_2, col_obs = st.columns([4,1,4,1,5])
 
             with col_eta:
                 __spaces(1)
@@ -218,6 +212,10 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict, que
                 
 
 
+            with col_spare:
+                st.empty()
+
+
             with col_etei:
                 __spaces(1)
                 st.write("## ETEI")
@@ -258,23 +256,8 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict, que
                 else:
                     st.success(f"Nível do Silo de Cal: {query_etei['nivel_silo_cal']}%")    # < 20%: verde
 
-            
 
-            with col_quim:
-                __spaces(1)
-                st.write("## Adição Químicos")
-                __spaces(1)
-                st.write('<p style="font-family:Roboto:wght@100; letter-spacing:.7px; font-size: 20px;">ETA:</p>', unsafe_allow_html=True)
-                quim_eta = st.container()
-                __spaces(1)
-                st.write('<p style="font-family:Roboto:wght@100; letter-spacing:.7px; font-size: 20px;">ETEI:</p>', unsafe_allow_html=True)
-                quim_etei = st.container()
-                __spaces(1)
-                st.write('<p style="font-family:Roboto:wght@100; letter-spacing:.7px; font-size: 20px;">Área Comum:</p>', unsafe_allow_html=True)
-                quim_comum = st.container()
-
-
-            with col_spare:
+            with col_spare_2:
                 st.empty()
 
 
@@ -317,95 +300,8 @@ def __display_shift_info(query_eta: dict, query_etei: dict, query_obs: dict, que
                         st.write(f'> {query_obs["scrap_bulk"]}')
                         __spaces(1)
                 
-        except AttributeError:
+        except AttributeError as e:
             st.write(":warning: Busca não encontrada.")
-
-        
-    # Controle de Químicos
-    if (query_quim == None) | (query_quim["date"] == ""):
-        st.empty()
-    else:
-        try:
-            if ((float(query_quim["eta_biocida"]) == 0.0) and (float(query_quim["eta_antiincrustante"]) == 0.0)
-                    and (float(query_quim["eta_soda"]) == 0.0) and (float(query_quim["eta_metabissulfato"]) == 0.0)):
-                        quim_eta.write("> Sem adição de químicos na ETA.")
-        except TypeError:
-            quim_eta.write("> Sem adição de químicos na ETA.")
-
-        try:
-            if ((float(query_quim["etei_biocida"]) == 0.0) and (float(query_quim["etei_antiincrustante"]) == 0.0)
-                    and (float(query_quim["etei_hipoclorito"]) == 0.0) and (float(query_quim["etei_metabissulfato"]) == 0.0)):
-                        quim_etei.write("> Sem adição de químicos na ETEI.")
-        except TypeError:
-            quim_etei.write("> Sem adição de químicos na ETEI.")
-
-        try:
-            if ((float(query_quim["comuns_h2so4_50"]) == 0.0) and (float(query_quim["comuns_h2so4_98"]) == 0.0)
-                    and (float(query_quim["comuns_soda"]) == 0.0) and (float(query_quim["comuns_hipoclorito"]) == 0.0) and (float(query_quim["comuns_citrico"]) == 0.0)):
-                        quim_comum.write("> Sem adição de químicos nas Áreas Comuns")
-        except TypeError:
-            quim_comum.write("> Sem adição de químicos nas Áreas Comuns")
-            
-        try:
-            # ETA
-            if float(query_quim["eta_biocida"]) != 0.0:
-                quim_eta.info(f"Biocida: {query_quim['eta_biocida']} L")
-                __spaces(1)
-            
-            if float(query_quim["eta_antiincrustante"]) != 0.0:
-                quim_eta.info(f"Antiincrustante: {query_quim['eta_antiincrustante']} L")
-                __spaces(1)
-
-            if float(query_quim["eta_soda"]) != 0.0:
-                quim_eta.info(f"Soda: {query_quim['eta_soda']} L")
-                __spaces(1)
-
-            if float(query_quim["eta_metabissulfato"]) != 0.0:
-                quim_eta.info(f"Metabissulfato: {query_quim['eta_metabissulfato']} L")
-                __spaces(1)
-
-            # ETEI
-            if float(query_quim["etei_biocida"]) != 0.0:
-                quim_etei.info(f"Biocida: {query_quim['etei_biocida']} L")
-                __spaces(1)
-            
-            if float(query_quim["etei_antiincrustante"]) != 0.0:
-                quim_etei.info(f"Antiincrustante: {query_quim['etei_antiincrustante']} L")
-                __spaces(1)
-
-            if float(query_quim["etei_hipoclorito"]) != 0.0:
-                quim_etei.info(f"Hipoclorito: {query_quim['etei_hipoclorito']} L")
-                __spaces(1)
-
-            if float(query_quim["etei_metabissulfato"]) != 0.0:
-                quim_etei.info(f"Metabissulfato: {query_quim['etei_metabissulfato']} L")
-                __spaces(1)
-
-            # Áreas Comuns
-            if float(query_quim["comuns_h2so4_50"]) != 0.0:
-                quim_comum.info(f"H2SO4 (50%): {query_quim['comuns_h2so4_50']} L")
-                __spaces(1)
-            
-            if float(query_quim["comuns_h2so4_98"]) != 0.0:
-                quim_comum.info(f"H2SO4 (98%): {query_quim['comuns_h2so4_98']} L")
-                __spaces(1)
-
-            if float(query_quim["comuns_soda"]) != 0.0:
-                quim_comum.info(f"Soda: {query_quim['comuns_soda']} L")
-                __spaces(1)
-
-            if float(query_quim["comuns_hipoclorito"]) != 0.0:
-                quim_comum.info(f"Hipoclorito: {query_quim['comuns_hipoclorito']} L")
-                __spaces(1)
-
-            if float(query_quim["comuns_citrico"]) != 0.0:
-                quim_comum.info(f"Ácido Citrico: {query_quim['comuns_citrico']} L")
-                __spaces(1)
-
-        except KeyError:
-            st.write(":warning: Busca não encontrada!")
-        except TypeError:
-            st.write("")
 
 
 
@@ -433,9 +329,6 @@ def _upload_shift_data(submit_args: dict) -> None:
 
     doc_ref_obs = db.collection(u"fechamento_obs").document(new_id)
     doc_ref_obs.set(submit_args["OBS"])
-
-    doc_ref_quim = db.collection(u"fechamento_quim").document(new_id)
-    doc_ref_quim.set(submit_args["QUIM"])
 
 
 
@@ -466,19 +359,7 @@ def __conflito_checkboxes() -> bool:
 
 
 def __parse_str_to_float(string: str) -> float:
-    """Converte a string proveniente do text_input para float.
-
-    Args:
-        string (str): String contendo um valor float.
-
-    Returns:
-        float: Valor flutuante a ser utilizado.
-    """
-    try:
-        return float(string.replace(',', '.').replace('%', ''))
-    except ValueError:
-        if string == "":
-            return 0
+    return float(string.replace(',', '.').replace('%', ''))
     
 
 
@@ -527,23 +408,6 @@ def __submit_callback() -> None:
                 "mbr_aeracao_sanitaria": st.session_state.obs_mbr_aeracao_sanitaria,
                 "utilidades": st.session_state.obs_utilidades,
                 "scrap_bulk": st.session_state.obs_scrap_bulk
-            },
-            "QUIM": {
-                "id": st.session_state.id,
-                "endedshift": st.session_state.sft,
-                "eta_biocida": __parse_str_to_float(st.session_state.eta_biocida),
-                "eta_antiincrustante": __parse_str_to_float(st.session_state.eta_antiincrustante),
-                "eta_soda": __parse_str_to_float(st.session_state.eta_soda),
-                "eta_metabissulfato": __parse_str_to_float(st.session_state.eta_metabissulfato),
-                "etei_biocida": __parse_str_to_float(st.session_state.etei_biocida),
-                "etei_antiincrustante": __parse_str_to_float(st.session_state.etei_antiincrustante),
-                "etei_hipoclorito": __parse_str_to_float(st.session_state.etei_hipoclorito),
-                "etei_metabissulfato": __parse_str_to_float(st.session_state.etei_metabissulfato),
-                "comuns_h2so4_50": __parse_str_to_float(st.session_state.comuns_h2so4_50),
-                "comuns_h2so4_98": __parse_str_to_float(st.session_state.comuns_h2so4_98),
-                "comuns_soda": __parse_str_to_float(st.session_state.comuns_soda),
-                "comuns_hipoclorito": __parse_str_to_float(st.session_state.comuns_hipoclorito),
-                "comuns_citrico": __parse_str_to_float(st.session_state.comuns_citrico)
             }
         }
 
@@ -556,10 +420,7 @@ def __submit_callback() -> None:
         
         # Limpar os campos de se inserir dados
         clear_list_1 = ["id", "sft", "silo_cal", "obs_geral", "obs_eta_etei", 
-        "obs_quim", "obs_mbr_aeracao_sanitaria", "obs_utilidades", "obs_scrap_bulk",
-        "eta_biocida", "eta_antiincrustante", "eta_soda", "eta_metabissulfato", "etei_biocida",
-        "etei_antiincrustante", "etei_hipoclorito", "etei_metabissulfato", "comuns_h2so4_50",
-        "comuns_h2so4_98", "comuns_soda", "comuns_hipoclorito", "comuns_citrico"]
+        "obs_quim", "obs_mbr_aeracao_sanitaria", "obs_utilidades", "obs_scrap_bulk"]
         clear_list_2 = ["coluna_di_saturada_100", "coluna_di_saturada_101", "regenerar_100",
         "regenerar_101", "troca_filtro_polidor_1", "troca_filtro_polidor_2", "dosou_antiespumante_mbr",
         "envio_sanitario_mbr", "transbordou_mbr", "troca_filtro_polidor", "quebra_emulsao"]
@@ -595,20 +456,17 @@ def __search_callback(home: bool=False) -> None:
         query_eta = __query(area="eta", home=home)
         query_etei = __query(area="etei", home=home)
         query_obs = __query(area="obs", home=home)
-        query_quim = __query(area="quim", home=home)
 
         # junta todas as informações
         merged_query_eta = __merge_docs(area="eta", query=query_eta)
         merged_query_etei = __merge_docs(area="etei", query=query_etei)
         merged_query_obs = __merge_docs(area="obs", query=query_obs)
-        merged_query_quim = __merge_docs(area="quim", query=query_quim)
 
         # mostra as informações na tela
-        __display_shift_info(merged_query_eta, merged_query_etei, merged_query_obs, merged_query_quim)
+        __display_shift_info(merged_query_eta, merged_query_etei, merged_query_obs)
     
     except IndexError:
-        st.write(":warning: Estamos passando por mudanças no Banco. Por favor, fique à vontade para inserir dados do turno.")
-        # st.write(":warning: Erro ao buscar no Banco de Dados. Tente novamente.")
+        st.write(":warning: Erro ao buscar no Banco de Dados. Tente novamente.")
 
         return None
 
@@ -632,8 +490,8 @@ def __inserir_dados() -> None:
     
     # Forms
     with st.form(key='form_in', clear_on_submit=False):
-        col_eta, col_eta_check_sim, col_eta_check_nao, col_empty1, \
-            col_etei, col_etei_check_sim, col_etei_check_nao = st.columns([2,1,1,1,2,1,1])
+        col_eta, col_eta_check_sim, col_eta_check_nao, col_empty1, col_etei, col_etei_check_sim, col_etei_check_nao = st.columns([2,1,1,1,2,1,1])
+
         # Coluna da ETA
         with col_eta:
             st.header("ETA")
@@ -725,65 +583,8 @@ def __inserir_dados() -> None:
             st.checkbox(label="Não", value=False, key="quebra_emulsao_nao")
 
 
-
-        # Controle de Quimicos
-        __spaces(3)
-        st.subheader("Controle de Adição de Químicos")  
-
-        col_quim_eta1, col_quim_eta2, col_empty, col_quim_etei1, \
-            col_quim_etei2, col_empty, col_quim_comuns1, col_quim_comuns2 = st.columns([2,2,1,2,2,1,2,2])
-
-
-        with col_quim_eta1:
-            __spaces(2)
-            st.write('<p style="font-family:Roboto:wght@100; letter-spacing:.7px; font-size: 20px;">ETA</p>', unsafe_allow_html=True)
-            st.text_input(label="Biocida", placeholder="Qtde (l)", key="eta_biocida")
-            __spaces(1)
-            st.text_input(label="Antiincrustante", placeholder="Qtde (l)", key="eta_antiincrustante")
-
-        with col_quim_eta2:
-            __spaces(5)
-            st.text_input(label="Soda", placeholder="Qtde (l)", key="eta_soda")
-            __spaces(1)
-            st.text_input(label="Metabissulfato", placeholder="Qtde (l)", key="eta_metabissulfato")
-
-        with col_empty:
-            st.empty()
-
-        with col_quim_etei1:
-            __spaces(2)
-            st.write('<p style="font-family:Roboto:wght@100; letter-spacing:.7px; font-size: 20px;">ETEI</p>', unsafe_allow_html=True)
-            st.text_input(label="Biocida", placeholder="Qtde (l)", key="etei_biocida")
-            __spaces(1)
-            st.text_input(label="Antiincrustante", placeholder="Qtde (l)", key="etei_antiincrustante")
-
-        with col_quim_etei2:
-            __spaces(5)
-            st.text_input(label="Hipoclorito", placeholder="Qtde (l)", key="etei_hipoclorito")
-            __spaces(1)
-            st.text_input(label="Metabissulfato", placeholder="Qtde (l)", key="etei_metabissulfato")
-
-        with col_empty:
-            st.empty()
-
-        with col_quim_comuns1:
-            __spaces(2)
-            st.write('<p style="font-family:Roboto:wght@100; letter-spacing:.7px; font-size: 20px;">Áreas Comuns</p>', unsafe_allow_html=True)
-            st.text_input(label="H2SO4 (50%)", placeholder="Qtde (l)", key="comuns_h2so4_50")
-            __spaces(1)
-            st.text_input(label="H2SO4 (98%)", placeholder="Qtde (l)", key="comuns_h2so4_98")
-
-        with col_quim_comuns2:
-            __spaces(5)
-            st.text_input(label="Soda", placeholder="Qtde (l)", key="comuns_soda")
-            __spaces(1)
-            st.text_input(label="Hipoclorito", placeholder="Qtde (l)", key="comuns_hipoclorito")
-            __spaces(1)
-            st.text_input(label="Ácido Cítrico", placeholder="Qtde (l)", key="comuns_citrico")
-        
-
         # Observações
-        __spaces(3)
+        __spaces(2)
         st.subheader("Observações")        
         
         col_obs_1, col_empty3, col_obs_2 = st.columns([6,1,6])
