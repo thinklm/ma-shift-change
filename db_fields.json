@@ -31,5 +31,23 @@
         "mbr_aeracao_sanitaria",
         "utilidades",
         "scrap_bulk"
+    ],
+    "quim": [
+        "date",
+        "id",
+        "endedshift",
+        "eta_biocida",
+        "eta_antiincrustante",
+        "eta_soda",
+        "eta_metabissulfato",
+        "etei_biocida",
+        "etei_antiincrustante",
+        "etei_hipoclorito",
+        "etei_metabissulfato",
+        "comuns_h2so4_50",
+        "comuns_h2so4_98",
+        "comuns_soda",
+        "comuns_hipoclorito",
+        "comuns_citrico"
     ]
 }
